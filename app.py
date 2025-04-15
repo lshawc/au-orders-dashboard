@@ -8,7 +8,7 @@ from io import StringIO
 # Streamlit page config
 st.set_page_config(page_title="AU Orders Report", layout="wide")
 
-# Custom CSS: black/white theme, light mode charts, neat layout
+# Custom CSS: black/white theme, full-width layout, light mode charts
 st.markdown("""
     <style>
     :root {
@@ -27,10 +27,12 @@ st.markdown("""
         background-color: var(--bg); 
         font-family: 'Segoe UI', Arial, sans-serif;
         color: var(--fg) !important;
-        padding: 10px;
+        padding: 0;
         margin: 0;
         color-scheme: auto;
         box-sizing: border-box;
+        width: 100vw;
+        max-width: 100%;
     }
     h1, h2, h3, h4, h5, h6 { 
         color: var(--fg) !important;
@@ -44,8 +46,10 @@ st.markdown("""
         background-color: var(--section-bg); 
         border-right: 3px solid var(--border);
         color: var(--fg) !important;
-        padding: 15px;
+        padding: 10px 5px;
         margin: 0;
+        width: 100%;
+        box-sizing: border-box;
     }
     .stMarkdown, .stWarning, .stError, .stWrite, .stCaption, 
     .stTextInput label, .stSelectbox label, .stDateInput label { 
@@ -55,13 +59,14 @@ st.markdown("""
     }
     .section { 
         background-color: var(--section-bg); 
-        padding: 20px; 
+        padding: 20px 10px; 
         border-radius: 10px; 
         border: 3px solid var(--section-border);
         box-shadow: 0 4px 8px rgba(255, 255, 255, 0.15);
         margin-bottom: 20px;
         color: var(--fg) !important;
         width: 100%;
+        max-width: 100%;
         box-sizing: border-box;
     }
     .section.viz-section {
@@ -79,6 +84,8 @@ st.markdown("""
         border-radius: 6px;
         border: 1px solid var(--border);
         margin: 10px 0;
+        width: 100%;
+        box-sizing: border-box;
     }
     .section .stMarkdown, 
     .section .stMarkdown p { 
@@ -94,6 +101,7 @@ st.markdown("""
         transition: background-color 0.3s, opacity 0.2s;
         width: 100%;
         margin: 10px 0;
+        box-sizing: border-box;
     }
     .stButton>button:hover {
         background-color: var(--button-hover);
@@ -107,7 +115,9 @@ st.markdown("""
         border-radius: 8px;
         overflow: hidden;
         width: 100%;
+        max-width: 100%;
         margin: 10px 0;
+        box-sizing: border-box;
     }
     .stDataFrame table { 
         border: 2px solid var(--border);
@@ -566,6 +576,6 @@ st.header("Conclusion")
 st.markdown(
     "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
-    "and temporal patterns. *Note*: Light mode charts and layout optimized for clarity and spacing."
+    "and temporal patterns. *Note*: Layout updated to remove unused side sections for a neater appearance."
 )
 st.markdown('</div>', unsafe_allow_html=True)
