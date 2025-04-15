@@ -8,7 +8,7 @@ from io import StringIO
 # Streamlit page config
 st.set_page_config(page_title="AU Orders Report", layout="wide")
 
-# Custom CSS: black/white theme, full-width layout, light mode charts
+# Custom CSS: black/white theme, full-width layout, fixed light mode charts
 st.markdown("""
     <style>
     :root {
@@ -61,7 +61,6 @@ st.markdown("""
         background-color: var(--section-bg); 
         padding: 20px 10px; 
         border-radius: 10px; 
-        border: 3px solid var(--section-border);
         box-shadow: 0 4px 8px rgba(255, 255, 255, 0.15);
         margin-bottom: 20px;
         color: var(--fg) !important;
@@ -127,6 +126,10 @@ st.markdown("""
         padding: 12px;
         color: var(--fg) !important;
     }
+    /* Fallback for chart colors in light mode */
+    [data-testid="stPlotlyChart"] {
+        background-color: var(--viz-bg) !important;
+    }
     /* Light mode: white background, black text */
     @media (prefers-color-scheme: light) {
         :root {
@@ -162,6 +165,9 @@ st.markdown("""
         }
         .sidebar .sidebar-content {
             background-color: var(--section-bg) !important;
+        }
+        [data-testid="stPlotlyChart"] {
+            background-color: #ffffff !important;
         }
     }
     </style>
@@ -277,6 +283,9 @@ if filtered_df.empty:
     st.warning("No orders match the selected filters.")
     st.stop()
 
+# Determine theme for chart rendering
+is_light_mode = st._config.get_option("theme.base") == "light"
+
 # Summary section
 st.markdown('<div class="section">', unsafe_allow_html=True)
 st.header("Summary")
@@ -355,19 +364,23 @@ if not map_data.empty:
         zoom=3,
         center={"lat": -25.2744, "lon": 133.7751}
     )
-    fig_map.update_layout(
-        mapbox_style="carto-darkmatter",
-        margin={"r":0, "t":0, "l":0, "b":0},
-        font=dict(color="#ffffff"),
-        paper_bgcolor="#222222",
-        plot_bgcolor="#222222",
-        coloraxis_colorbar_title="Orders"
-    )
-    if st.get_option("theme.base") == "light":
+    if is_light_mode:
         fig_map.update_layout(
+            mapbox_style="carto-positron",
+            margin={"r":0, "t":0, "l":0, "b":0},
             font=dict(color="#000000"),
             paper_bgcolor="#ffffff",
-            plot_bgcolor="#ffffff"
+            plot_bgcolor="#ffffff",
+            coloraxis_colorbar_title="Orders"
+        )
+    else:
+        fig_map.update_layout(
+            mapbox_style="carto-darkmatter",
+            margin={"r":0, "t":0, "l":0, "b":0},
+            font=dict(color="#ffffff"),
+            paper_bgcolor="#222222",
+            plot_bgcolor="#222222",
+            coloraxis_colorbar_title="Orders"
         )
 else:
     st.error("No valid lat/lon data available for mapping.")
@@ -387,7 +400,7 @@ else:
         paper_bgcolor="#222222",
         plot_bgcolor="#222222"
     )
-    if st.get_option("theme.base") == "light":
+    if is_light_mode:
         fig_map.update_layout(
             font=dict(color="#000000"),
             paper_bgcolor="#ffffff",
@@ -414,7 +427,7 @@ fig_bar.update_layout(
     paper_bgcolor="#222222",
     plot_bgcolor="#222222"
 )
-if st.get_option("theme.base") == "light":
+if is_light_mode:
     fig_bar.update_layout(
         font=dict(color="#000000"),
         paper_bgcolor="#ffffff",
@@ -440,7 +453,7 @@ fig_line.update_layout(
     paper_bgcolor="#222222",
     plot_bgcolor="#222222"
 )
-if st.get_option("theme.base") == "light":
+if is_light_mode:
     fig_line.update_layout(
         font=dict(color="#000000"),
         paper_bgcolor="#ffffff",
@@ -474,7 +487,7 @@ if len(state_mom_data['OrderDate'].unique()) > 1 and state_mom_data['MoM_Change'
         plot_bgcolor="#222222",
         showlegend=True
     )
-    if st.get_option("theme.base") == "light":
+    if is_light_mode:
         fig_state_mom.update_layout(
             font=dict(color="#000000"),
             paper_bgcolor="#ffffff",
@@ -511,7 +524,7 @@ if len(mom_data) > 1:
         paper_bgcolor="#222222",
         plot_bgcolor="#222222"
     )
-    if st.get_option("theme.base") == "light":
+    if is_light_mode:
         fig_mom.update_layout(
             font=dict(color="#000000"),
             paper_bgcolor="#ffffff",
@@ -576,6 +589,6 @@ st.header("Conclusion")
 st.markdown(
     "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
-    "and temporal patterns. *Note*: Layout updated to remove unused side sections for a neater appearance."
+    "and temporal patterns. *Note*: Thick underlines removed, light mode charts fixed for consistency."
 )
 st.markdown('</div>', unsafe_allow_html=True)
