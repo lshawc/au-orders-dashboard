@@ -3,63 +3,88 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, date
+from io import StringIO
 
 # Streamlit page config
 st.set_page_config(page_title="AU Orders Report", layout="wide")
 
-# Custom CSS: black background, white text, preserve graph colors
+# Custom CSS: improved contrast for light/dark modes
 st.markdown("""
     <style>
+    :root {
+        --bg: #000000;
+        --fg: #ffffff;
+        --border: #333333;
+        --button-bg: #1976d2;
+        --button-hover: #1565c0;
+        --table-bg: #1a1a1a;
+    }
     .stApp { 
-        background-color: #000000; 
+        background-color: var(--bg); 
         font-family: 'Segoe UI', Arial, sans-serif;
-        color: #ffffff !important;
+        color: var(--fg);
     }
     h1, h2, h3, h4, h5, h6 { 
-        color: #ffffff !important;
+        color: var(--fg) !important;
         font-weight: 600;
     }
     .sidebar .sidebar-content { 
-        background-color: #1a1a1a; 
-        border-right: 1px solid #333333;
-        color: #ffffff !important;
+        background-color: var(--table-bg); 
+        border-right: 1px solid var(--border);
+        color: var(--fg) !important;
     }
-    .stMarkdown, .stWarning, .stError, .stWrite, .stCaption { 
-        color: #ffffff !important;
+    .stMarkdown, .stWarning, .stError, .stWrite, .stCaption, .stTextInput label, .stSelectbox label, .stDateInput label { 
+        color: var(--fg) !important;
     }
     .summary-section { 
-        background-color: #000000; 
+        background-color: var(--bg); 
         padding: 15px; 
         border-radius: 8px; 
-        border: 1px solid #333333;
-        color: #ffffff !important;
+        border: 1px solid var(--border);
+        color: var(--fg) !important;
     }
     .summary-section [data-testid="stMetric"], 
     .summary-section [data-testid="stMetricLabel"], 
     .summary-section [data-testid="stMetricValue"], 
     .summary-section .css-1x8cf1d { 
-        background-color: #000000 !important;
-        color: #ffffff !important;
+        background-color: var(--bg) !important;
+        color: var(--fg) !important;
     }
     .summary-section .stMarkdown, 
     .summary-section .stMarkdown p { 
-        color: #ffffff !important;
+        color: var(--fg) !important;
     }
     .stButton>button {
-        background-color: #1976d2;
-        color: #ffffff !important;
+        background-color: var(--button-bg);
+        color: var(--fg) !important;
         border-radius: 6px;
+        border: 1px solid var(--fg);
+        transition: background-color 0.2s;
     }
     .stButton>button:hover {
-        background-color: #1565c0;
-        color: #ffffff !important;
+        background-color: var(--button-hover);
+        color: var(--fg) !important;
     }
     .stDataFrame, .stDataFrame table, .stDataFrame td, .stDataFrame th { 
-        color: #ffffff !important;
-        background-color: #1a1a1a !important;
+        color: var(--fg) !important;
+        background-color: var(--table-bg) !important;
+        border-collapse: collapse;
     }
     .stDataFrame table { 
-        border: 1px solid #333333;
+        border: 1px solid var(--border);
+    }
+    .stDataFrame td, .stDataFrame th {
+        border: 1px solid var(--border);
+        padding: 8px;
+    }
+    /* Improve contrast for light mode */
+    @media (prefers-color-scheme: light) {
+        .stApp {
+            filter: contrast(1.2);
+        }
+        h1, h2, h3, h4, h5, h6, .stMarkdown, .stWrite, .stCaption, .stTextInput label, .stSelectbox label, .stDateInput label {
+            text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+        }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -108,7 +133,6 @@ def load_postcode_data():
     try:
         postcode_df = pd.read_csv(url)
     except:
-        # Fallback to sample data if postcode_data.csv is unavailable
         st.warning("Postcode data not found. Using sample data.")
         sample_csv = """postcode,place_name,state_name,state_code,latitude,longitude,accuracy
 200,Australian National University,Australian Capital Territory,ACT,-35.2777,149.1189,1
@@ -426,7 +450,7 @@ if st.button("Submit Feedback"):
 # Conclusion
 st.header("Conclusion")
 st.markdown(
-    "This report visualises AU orders by postal code and state, with enhanced mapping using lat/lon data, "
+    "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
-    "and temporal patterns."
+    "and temporal patterns. *Note*: Contrast optimized for light and dark modes across browsers."
 )
