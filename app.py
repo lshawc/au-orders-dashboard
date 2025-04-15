@@ -8,47 +8,60 @@ from io import StringIO
 # Streamlit page config
 st.set_page_config(page_title="AU Orders Report", layout="wide")
 
-# Custom CSS: improved contrast for light/dark modes
+# Custom CSS: enhanced contrast and section differentiation
 st.markdown("""
     <style>
     :root {
         --bg: #000000;
         --fg: #ffffff;
-        --border: #333333;
-        --button-bg: #1976d2;
-        --button-hover: #1565c0;
+        --section-bg: #1a1a1a;
+        --viz-bg: #222222;
         --table-bg: #1a1a1a;
+        --border: #444444;
+        --button-bg: #0288d1;
+        --button-hover: #0277bd;
+        --header-border: #ffffff;
     }
     .stApp { 
         background-color: var(--bg); 
         font-family: 'Segoe UI', Arial, sans-serif;
         color: var(--fg);
+        padding: 20px;
     }
     h1, h2, h3, h4, h5, h6 { 
         color: var(--fg) !important;
-        font-weight: 600;
+        font-weight: 700;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--header-border);
+        margin-bottom: 15px;
     }
     .sidebar .sidebar-content { 
-        background-color: var(--table-bg); 
-        border-right: 1px solid var(--border);
+        background-color: var(--viz-bg); 
+        border-right: 2px solid var(--border);
         color: var(--fg) !important;
+        padding: 15px;
     }
     .stMarkdown, .stWarning, .stError, .stWrite, .stCaption, .stTextInput label, .stSelectbox label, .stDateInput label { 
         color: var(--fg) !important;
+        margin: 10px 0;
     }
     .summary-section { 
-        background-color: var(--bg); 
-        padding: 15px; 
-        border-radius: 8px; 
-        border: 1px solid var(--border);
+        background-color: var(--section-bg); 
+        padding: 20px; 
+        border-radius: 10px; 
+        border: 2px solid var(--fg);
+        box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+        margin-bottom: 20px;
         color: var(--fg) !important;
     }
     .summary-section [data-testid="stMetric"], 
     .summary-section [data-testid="stMetricLabel"], 
     .summary-section [data-testid="stMetricValue"], 
     .summary-section .css-1x8cf1d { 
-        background-color: var(--bg) !important;
+        background-color: var(--section-bg) !important;
         color: var(--fg) !important;
+        padding: 10px;
+        border-radius: 5px;
     }
     .summary-section .stMarkdown, 
     .summary-section .stMarkdown p { 
@@ -57,33 +70,66 @@ st.markdown("""
     .stButton>button {
         background-color: var(--button-bg);
         color: var(--fg) !important;
-        border-radius: 6px;
-        border: 1px solid var(--fg);
-        transition: background-color 0.2s;
+        border-radius: 8px;
+        border: 2px solid var(--fg);
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: background-color 0.3s, transform 0.2s;
     }
     .stButton>button:hover {
         background-color: var(--button-hover);
         color: var(--fg) !important;
+        transform: scale(1.05);
     }
-    .stDataFrame, .stDataFrame table, .stDataFrame td, .stDataFrame th { 
+    .stDataFrame, .stDataFrame table { 
         color: var(--fg) !important;
         background-color: var(--table-bg) !important;
         border-collapse: collapse;
+        border-radius: 8px;
+        overflow: hidden;
     }
     .stDataFrame table { 
-        border: 1px solid var(--border);
+        border: 2px solid var(--border);
     }
     .stDataFrame td, .stDataFrame th {
         border: 1px solid var(--border);
-        padding: 8px;
+        padding: 10px;
     }
-    /* Improve contrast for light mode */
+    .visualizations-section, .details-section, .feedback-section {
+        background-color: var(--viz-bg);
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        margin-bottom: 20px;
+        box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+    }
+    /* Light mode adjustments */
     @media (prefers-color-scheme: light) {
-        .stApp {
-            filter: contrast(1.2);
+        :root {
+            --fg: #e0e0e0;
+            --section-bg: #2a2a2a;
+            --viz-bg: #333333;
+            --table-bg: #2a2a2a;
+            --border: #555555;
         }
-        h1, h2, h3, h4, h5, h6, .stMarkdown, .stWrite, .stCaption, .stTextInput label, .stSelectbox label, .stDateInput label {
-            text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+        .stApp {
+            filter: contrast(1.3) brightness(1.1);
+        }
+        .summary-section, .visualizations-section, .details-section, .feedback-section {
+            background-color: var(--section-bg);
+            border-color: var(--border);
+        }
+        .stDataFrame, .stDataFrame table {
+            background-color: var(--table-bg);
+        }
+        h1, h2, h3, h4, h5, h6, .stMarkdown, .stWrite, .stCaption, 
+        .stTextInput label, .stSelectbox label, .stDateInput label {
+            color: var(--fg) !important;
+            text-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+        }
+        .summary-section [data-testid="stMetric"] {
+            background-color: #ffffff !important;
+            color: #333333 !important;
         }
     }
     </style>
@@ -228,6 +274,7 @@ st.markdown(
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Top Postal Codes Table
+st.markdown('<div class="details-section">', unsafe_allow_html=True)
 st.subheader("Top 10 Postal Codes")
 postal_counts = filtered_df.groupby(['PostalCode', 'State']).size().reset_index(name='OrderCount')
 postal_counts = postal_counts.sort_values('OrderCount', ascending=False).head(10)
@@ -243,6 +290,7 @@ st.dataframe(
 
 # Visualisations
 st.header("Visualisations")
+st.markdown('<div class="visualizations-section">', unsafe_allow_html=True)
 
 # Map of Australia
 st.subheader("Orders by Postal Code")
@@ -279,8 +327,8 @@ if not map_data.empty:
         mapbox_style="carto-darkmatter",
         margin={"r":0, "t":0, "l":0, "b":0},
         font=dict(color="#ffffff"),
-        paper_bgcolor="#000000",
-        plot_bgcolor="#000000",
+        paper_bgcolor="#222222",
+        plot_bgcolor="#222222",
         coloraxis_colorbar_title="Orders"
     )
 else:
@@ -298,8 +346,8 @@ else:
     fig_map.update_layout(
         showlegend=False,
         font=dict(color="#ffffff"),
-        paper_bgcolor="#000000",
-        plot_bgcolor="#000000"
+        paper_bgcolor="#222222",
+        plot_bgcolor="#222222"
     )
 st.plotly_chart(fig_map, use_container_width=True)
 
@@ -319,8 +367,8 @@ fig_bar = px.bar(
 fig_bar.update_layout(
     showlegend=False,
     font=dict(color="#ffffff"),
-    paper_bgcolor="#000000",
-    plot_bgcolor="#000000"
+    paper_bgcolor="#222222",
+    plot_bgcolor="#222222"
 )
 st.plotly_chart(fig_bar, use_container_width=True)
 
@@ -339,8 +387,8 @@ fig_line = px.line(
 fig_line.update_traces(mode='lines+markers')
 fig_line.update_layout(
     font=dict(color="#ffffff"),
-    paper_bgcolor="#000000",
-    plot_bgcolor="#000000"
+    paper_bgcolor="#222222",
+    plot_bgcolor="#222222"
 )
 st.plotly_chart(fig_line, use_container_width=True)
 
@@ -366,8 +414,8 @@ if len(state_mom_data['OrderDate'].unique()) > 1 and state_mom_data['MoM_Change'
     fig_state_mom.update_traces(mode='lines+markers')
     fig_state_mom.update_layout(
         font=dict(color="#ffffff"),
-        paper_bgcolor="#000000",
-        plot_bgcolor="#000000",
+        paper_bgcolor="#222222",
+        plot_bgcolor="#222222",
         showlegend=True
     )
     st.plotly_chart(fig_state_mom, use_container_width=True)
@@ -398,8 +446,8 @@ if len(mom_data) > 1:
         yaxis_title="MoM Change (%)",
         showlegend=True,
         font=dict(color="#ffffff"),
-        paper_bgcolor="#000000",
-        plot_bgcolor="#000000"
+        paper_bgcolor="#222222",
+        plot_bgcolor="#222222"
     )
     st.plotly_chart(fig_mom, use_container_width=True)
     mom_data['MoM_Change'] = mom_data['MoM_Change'].apply(lambda x: f"{x:.1f}%" if pd.notnull(x) else "N/A")
@@ -411,9 +459,11 @@ if len(mom_data) > 1:
     )
 else:
     st.write("Insufficient data for MoM analysis (need at least 2 months).")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Data Table with Drill-Down
 st.header("Order Details")
+st.markdown('<div class="details-section">', unsafe_allow_html=True)
 st.subheader("Filtered Orders")
 if order_id_filter:
     st.write(f"Showing orders matching OrderID: {order_id_filter}")
@@ -430,8 +480,10 @@ st.dataframe(
     use_container_width=True
 )
 st.write(f"Showing rows {start_idx + 1} to {min(end_idx, len(filtered_df))} of {len(filtered_df)}")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Download button
+st.markdown('<div class="details-section">', unsafe_allow_html=True)
 st.header("Download Data")
 csv = filtered_df.to_csv(index=False).encode('utf-8')
 st.download_button(
@@ -440,17 +492,22 @@ st.download_button(
     file_name="au_orders_filtered.csv",
     mime="text/csv"
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Feedback form
+st.markdown('<div class="feedback-section">', unsafe_allow_html=True)
 st.header("Feedback")
 feedback = st.text_area("Enter your feedback")
 if st.button("Submit Feedback"):
     st.write("Thank you for your feedback!")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Conclusion
+st.markdown('<div class="feedback-section">', unsafe_allow_html=True)
 st.header("Conclusion")
 st.markdown(
     "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
-    "and temporal patterns. *Note*: Contrast optimized for light and dark modes across browsers."
+    "and temporal patterns. *Note*: Contrast and section differentiation optimized for light and dark modes."
 )
+st.markdown('</div>', unsafe_allow_html=True)
