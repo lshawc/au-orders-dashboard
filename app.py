@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, date
-from io import StringIO
 
 # Streamlit page config
 st.set_page_config(page_title="AU Orders Report", layout="wide")
@@ -74,28 +73,12 @@ if password != "au_team_2025":  # Replace with a strong password
 # Test message
 st.write("Australia Location Review")
 
-# Embedded sample data
-order_csv = """OrderID,OrderDate,PostalCode,State
-AU001,2024-01-15,200,ACT
-AU002,2024-02-10,221,ACT
-AU003,2024-03-05,2540,ACT
-AU004,2024-03-20,2600,ACT
-AU005,2024-04-01,200,ACT
-AU006,2024-04-15,2540,ACT
-"""
-
-postcode_csv = """postcode,place_name,state_name,state_code,latitude,longitude,accuracy
-200,Australian National University,Australian Capital Territory,ACT,-35.2777,149.1189,1
-221,Barton,Australian Capital Territory,ACT,-35.3049,149.1412,4
-2540,Jervis Bay,Australian Capital Territory,ACT,-35.1333,150.7,4
-2600,Deakin West,Australian Capital Territory,ACT,-35.3126,149.1278,3
-"""
-
 # Load order data
 @st.cache_data
 def load_data():
+    url = "https://raw.githubusercontent.com/lshawc/au-orders-dashboard/main/au_report.csv"
     try:
-        df = pd.read_csv(StringIO(order_csv))
+        df = pd.read_csv(url)
         required_cols = ['OrderID', 'OrderDate', 'PostalCode', 'State']
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
@@ -115,31 +98,43 @@ def load_data():
             st.warning("No OrderIDs start with 'AU'. Expected from query WHERE ID LIKE 'AU%'.")
         return df
     except Exception as e:
-        st.error(f"Error loading order data: {str(e)}")
+        st.error(f"Error loading order data from {url}: {str(e)}")
         st.stop()
 
 # Load postcode data
 @st.cache_data
 def load_postcode_data():
+    url = "https://raw.githubusercontent.com/lshawc/au-orders-dashboard/main/postcode_data.csv"
     try:
-        postcode_df = pd.read_csv(StringIO(postcode_csv))
-        required_cols = ['postcode', 'latitude', 'longitude']
-        missing_cols = [col for col in required_cols if col not in postcode_df.columns]
-        if missing_cols:
-            st.error(f"Postcode CSV missing columns: {', '.join(missing_cols)}")
-            st.stop()
-        postcode_df['postcode'] = postcode_df['postcode'].astype(str)
-        if 'accuracy' in postcode_df.columns:
-            postcode_df = postcode_df.sort_values(by=['postcode', 'accuracy'], ascending=[True, False])
-        postcode_df = postcode_df.groupby('postcode').first().reset_index()
-        initial_len = len(postcode_df)
-        postcode_df = postcode_df.dropna(subset=['latitude', 'longitude'])
-        if len(postcode_df) < initial_len:
-            st.warning(f"Removed {initial_len - len(postcode_df)} rows with invalid lat/lon values.")
-        return postcode_df
-    except Exception as e:
-        st.error(f"Error loading postcode data: {str(e)}")
+        postcode_df = pd.read_csv(url)
+    except:
+        # Fallback to sample data if postcode_data.csv is unavailable
+        st.warning("Postcode data not found. Using sample data.")
+        sample_csv = """postcode,place_name,state_name,state_code,latitude,longitude,accuracy
+200,Australian National University,Australian Capital Territory,ACT,-35.2777,149.1189,1
+221,Barton,Australian Capital Territory,ACT,-35.3049,149.1412,4
+2540,Jervis Bay,Australian Capital Territory,ACT,-35.1333,150.7,4
+2600,Deakin West,Australian Capital Territory,ACT,-35.3126,149.1278,3
+2000,Sydney,New South Wales,NSW,-33.8688,151.2093,4
+2010,Surry Hills,New South Wales,NSW,-33.8792,151.2070,4
+3000,Melbourne,Victoria,VIC,-37.8136,144.9631,4
+3001,Melbourne,Victoria,VIC,-37.8136,144.9631,4
+"""
+        postcode_df = pd.read_csv(StringIO(sample_csv))
+    required_cols = ['postcode', 'latitude', 'longitude']
+    missing_cols = [col for col in required_cols if col not in postcode_df.columns]
+    if missing_cols:
+        st.error(f"Postcode CSV missing columns: {', '.join(missing_cols)}")
         st.stop()
+    postcode_df['postcode'] = postcode_df['postcode'].astype(str)
+    if 'accuracy' in postcode_df.columns:
+        postcode_df = postcode_df.sort_values(by=['postcode', 'accuracy'], ascending=[True, False])
+    postcode_df = postcode_df.groupby('postcode').first().reset_index()
+    initial_len = len(postcode_df)
+    postcode_df = postcode_df.dropna(subset=['latitude', 'longitude'])
+    if len(postcode_df) < initial_len:
+        st.warning(f"Removed {initial_len - len(postcode_df)} rows with invalid lat/lon values.")
+    return postcode_df
 
 df = load_data()
 postcode_df = load_postcode_data()
@@ -422,10 +417,16 @@ st.download_button(
     mime="text/csv"
 )
 
+# Feedback form
+st.header("Feedback")
+feedback = st.text_area("Enter your feedback")
+if st.button("Submit Feedback"):
+    st.write("Thank you for your feedback!")
+
 # Conclusion
 st.header("Conclusion")
 st.markdown(
-    "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
+    "This report visualises AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
     "and temporal patterns."
 )
