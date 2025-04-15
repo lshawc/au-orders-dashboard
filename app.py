@@ -8,60 +8,65 @@ from io import StringIO
 # Streamlit page config
 st.set_page_config(page_title="AU Orders Report", layout="wide")
 
-# Custom CSS: enhanced contrast and section differentiation
+# Custom CSS: dark theme, high contrast for Firefox light mode
 st.markdown("""
     <style>
     :root {
-        --bg: #000000;
-        --fg: #ffffff;
-        --section-bg: #1a1a1a;
-        --viz-bg: #222222;
-        --table-bg: #1a1a1a;
-        --border: #444444;
-        --button-bg: #0288d1;
-        --button-hover: #0277bd;
-        --header-border: #ffffff;
+        --bg: #1c2526;
+        --fg: #f5f5f5;
+        --section-bg: #2a3b3d;
+        --viz-bg: #354b4d;
+        --table-bg: #2a3b3d;
+        --border: #4a5e60;
+        --section-border: #cccccc;
+        --button-bg: #039be5;
+        --button-hover: #0288d1;
+        --header-border: #cccccc;
     }
     .stApp { 
         background-color: var(--bg); 
         font-family: 'Segoe UI', Arial, sans-serif;
-        color: var(--fg);
-        padding: 20px;
+        color: var(--fg) !important;
+        padding: 25px;
+        color-scheme: dark;
+        text-rendering: optimizeLegibility;
     }
     h1, h2, h3, h4, h5, h6 { 
         color: var(--fg) !important;
-        font-weight: 700;
-        padding: 10px 0;
-        border-bottom: 1px solid var(--header-border);
-        margin-bottom: 15px;
+        font-weight: 800;
+        padding: 12px 0;
+        border-bottom: 2px solid var(--header-border);
+        margin-bottom: 20px;
     }
     .sidebar .sidebar-content { 
-        background-color: var(--viz-bg); 
-        border-right: 2px solid var(--border);
+        background-color: #263537; 
+        border-right: 3px solid var(--border);
         color: var(--fg) !important;
-        padding: 15px;
+        padding: 20px;
     }
-    .stMarkdown, .stWarning, .stError, .stWrite, .stCaption, .stTextInput label, .stSelectbox label, .stDateInput label { 
+    .stMarkdown, .stWarning, .stError, .stWrite, .stCaption, 
+    .stTextInput label, .stSelectbox label, .stDateInput label { 
         color: var(--fg) !important;
-        margin: 10px 0;
+        margin: 12px 0;
+        font-weight: 500;
     }
     .summary-section { 
         background-color: var(--section-bg); 
-        padding: 20px; 
-        border-radius: 10px; 
-        border: 2px solid var(--fg);
-        box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
-        margin-bottom: 20px;
+        padding: 25px; 
+        border-radius: 12px; 
+        border: 3px solid var(--section-border);
+        box-shadow: 0 6px 12px rgba(255, 255, 255, 0.15);
+        margin-bottom: 25px;
         color: var(--fg) !important;
     }
     .summary-section [data-testid="stMetric"], 
     .summary-section [data-testid="stMetricLabel"], 
-    .summary-section [data-testid="stMetricValue"], 
-    .summary-section .css-1x8cf1d { 
+    .summary-section [data-testid="stMetricValue"] { 
         background-color: var(--section-bg) !important;
         color: var(--fg) !important;
-        padding: 10px;
-        border-radius: 5px;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
     }
     .summary-section .stMarkdown, 
     .summary-section .stMarkdown p { 
@@ -70,10 +75,10 @@ st.markdown("""
     .stButton>button {
         background-color: var(--button-bg);
         color: var(--fg) !important;
-        border-radius: 8px;
-        border: 2px solid var(--fg);
-        padding: 10px 20px;
-        font-weight: 600;
+        border-radius: 10px;
+        border: 3px solid var(--fg);
+        padding: 12px 25px;
+        font-weight: 700;
         transition: background-color 0.3s, transform 0.2s;
     }
     .stButton>button:hover {
@@ -85,51 +90,46 @@ st.markdown("""
         color: var(--fg) !important;
         background-color: var(--table-bg) !important;
         border-collapse: collapse;
-        border-radius: 8px;
+        border-radius: 10px;
         overflow: hidden;
     }
     .stDataFrame table { 
-        border: 2px solid var(--border);
+        border: 3px solid var(--border);
     }
     .stDataFrame td, .stDataFrame th {
-        border: 1px solid var(--border);
-        padding: 10px;
+        border: 2px solid var(--border);
+        padding: 12px;
+        color: var(--fg) !important;
     }
     .visualizations-section, .details-section, .feedback-section {
         background-color: var(--viz-bg);
-        padding: 20px;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        margin-bottom: 20px;
-        box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+        padding: 25px;
+        border-radius: 12px;
+        border: 2px solid var(--section-border);
+        margin-bottom: 25px;
+        box-shadow: 0 6px 12px rgba(255, 255, 255, 0.15);
+        color: var(--fg) !important;
     }
-    /* Light mode adjustments */
+    /* Force dark styles even in light mode */
+    .stApp, .summary-section, .visualizations-section, 
+    .details-section, .feedback-section {
+        background-color: var(--bg);
+    }
     @media (prefers-color-scheme: light) {
         :root {
-            --fg: #e0e0e0;
-            --section-bg: #2a2a2a;
-            --viz-bg: #333333;
-            --table-bg: #2a2a2a;
-            --border: #555555;
-        }
-        .stApp {
-            filter: contrast(1.3) brightness(1.1);
-        }
-        .summary-section, .visualizations-section, .details-section, .feedback-section {
-            background-color: var(--section-bg);
-            border-color: var(--border);
-        }
-        .stDataFrame, .stDataFrame table {
-            background-color: var(--table-bg);
-        }
-        h1, h2, h3, h4, h5, h6, .stMarkdown, .stWrite, .stCaption, 
-        .stTextInput label, .stSelectbox label, .stDateInput label {
-            color: var(--fg) !important;
-            text-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+            --fg: #d0d0d0;
+            --section-bg: #263537;
+            --viz-bg: #2f4143;
+            --table-bg: #263537;
         }
         .summary-section [data-testid="stMetric"] {
             background-color: #ffffff !important;
             color: #333333 !important;
+        }
+        h1, h2, h3, h4, h5, h6, .stMarkdown, .stWrite, .stCaption, 
+        .stTextInput label, .stSelectbox label, .stDateInput label {
+            color: var(--fg) !important;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
         }
     }
     </style>
@@ -326,9 +326,9 @@ if not map_data.empty:
     fig_map.update_layout(
         mapbox_style="carto-darkmatter",
         margin={"r":0, "t":0, "l":0, "b":0},
-        font=dict(color="#ffffff"),
-        paper_bgcolor="#222222",
-        plot_bgcolor="#222222",
+        font=dict(color="#f5f5f5"),
+        paper_bgcolor="#354b4d",
+        plot_bgcolor="#354b4d",
         coloraxis_colorbar_title="Orders"
     )
 else:
@@ -345,9 +345,9 @@ else:
     )
     fig_map.update_layout(
         showlegend=False,
-        font=dict(color="#ffffff"),
-        paper_bgcolor="#222222",
-        plot_bgcolor="#222222"
+        font=dict(color="#f5f5f5"),
+        paper_bgcolor="#354b4d",
+        plot_bgcolor="#354b4d"
     )
 st.plotly_chart(fig_map, use_container_width=True)
 
@@ -366,9 +366,9 @@ fig_bar = px.bar(
 )
 fig_bar.update_layout(
     showlegend=False,
-    font=dict(color="#ffffff"),
-    paper_bgcolor="#222222",
-    plot_bgcolor="#222222"
+    font=dict(color="#f5f5f5"),
+    paper_bgcolor="#354b4d",
+    plot_bgcolor="#354b4d"
 )
 st.plotly_chart(fig_bar, use_container_width=True)
 
@@ -386,9 +386,9 @@ fig_line = px.line(
 )
 fig_line.update_traces(mode='lines+markers')
 fig_line.update_layout(
-    font=dict(color="#ffffff"),
-    paper_bgcolor="#222222",
-    plot_bgcolor="#222222"
+    font=dict(color="#f5f5f5"),
+    paper_bgcolor="#354b4d",
+    plot_bgcolor="#354b4d"
 )
 st.plotly_chart(fig_line, use_container_width=True)
 
@@ -413,9 +413,9 @@ if len(state_mom_data['OrderDate'].unique()) > 1 and state_mom_data['MoM_Change'
     )
     fig_state_mom.update_traces(mode='lines+markers')
     fig_state_mom.update_layout(
-        font=dict(color="#ffffff"),
-        paper_bgcolor="#222222",
-        plot_bgcolor="#222222",
+        font=dict(color="#f5f5f5"),
+        paper_bgcolor="#354b4d",
+        plot_bgcolor="#354b4d",
         showlegend=True
     )
     st.plotly_chart(fig_state_mom, use_container_width=True)
@@ -445,9 +445,9 @@ if len(mom_data) > 1:
         xaxis_title="Month",
         yaxis_title="MoM Change (%)",
         showlegend=True,
-        font=dict(color="#ffffff"),
-        paper_bgcolor="#222222",
-        plot_bgcolor="#222222"
+        font=dict(color="#f5f5f5"),
+        paper_bgcolor="#354b4d",
+        plot_bgcolor="#354b4d"
     )
     st.plotly_chart(fig_mom, use_container_width=True)
     mom_data['MoM_Change'] = mom_data['MoM_Change'].apply(lambda x: f"{x:.1f}%" if pd.notnull(x) else "N/A")
@@ -508,6 +508,6 @@ st.header("Conclusion")
 st.markdown(
     "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
-    "and temporal patterns. *Note*: Contrast and section differentiation optimized for light and dark modes."
+    "and temporal patterns. *Note*: Readability improved for Firefox light mode with darker theme and high contrast."
 )
 st.markdown('</div>', unsafe_allow_html=True)
