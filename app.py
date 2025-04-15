@@ -284,7 +284,7 @@ if filtered_df.empty:
     st.stop()
 
 # Determine theme for chart rendering
-is_light_mode = st._config.get_option("theme.base") == "light"
+is_light_mode = st.get_option("theme.base") == "light" or st._config.get_option("theme.base") == "light"
 
 # Summary section
 st.markdown('<div class="section">', unsafe_allow_html=True)
@@ -589,6 +589,6 @@ st.header("Conclusion")
 st.markdown(
     "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
-    "and temporal patterns. *Note*: Thick underlines removed, light mode charts fixed for consistency."
+    "and temporal patterns. *Note*: Light mode charts now fully aligned with white background and black text."
 )
 st.markdown('</div>', unsafe_allow_html=True)
