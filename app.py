@@ -4,12 +4,51 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, date
 from io import StringIO
-import streamlit.components.v1 as components
 
 # Streamlit page config
 st.set_page_config(page_title="AU Orders Report", layout="wide")
 
-# Custom CSS: black/white theme, full-width layout, fixed light mode charts
+# Initialize session state for theme
+if 'theme' not in st.session_state:
+    st.session_state['theme'] = "Auto"
+
+# Theme toggle
+theme = st.selectbox("Theme", ["Auto", "Light", "Dark"], index=["Auto", "Light", "Dark"].index(st.session_state['theme']))
+st.session_state['theme'] = theme
+
+# Apply theme override via CSS
+if theme == "Light":
+    st.markdown("""
+        <style>
+        :root {
+            --bg: #ffffff;
+            --fg: #000000;
+            --section-bg: #f5f5f5;
+            --viz-bg: #e0e0e0;
+            --table-bg: #f5f5f5;
+            --border: #444444;
+            --section-border: #333333;
+            --header-border: #000000;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+elif theme == "Dark":
+    st.markdown("""
+        <style>
+        :root {
+            --bg: #000000;
+            --fg: #ffffff;
+            --section-bg: #1a1a1a;
+            --viz-bg: #222222;
+            --table-bg: #1a1a1a;
+            --border: #444444;
+            --section-border: #ffffff;
+            --header-border: #ffffff;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+# Custom CSS: black/white theme, full-width layout
 st.markdown("""
     <style>
     :root {
@@ -127,13 +166,12 @@ st.markdown("""
         padding: 12px;
         color: var(--fg) !important;
     }
-    /* Fallback for chart colors in light mode */
+    /* Fallback for chart colors */
     [data-testid="stPlotlyChart"], 
     [data-testid="stPlotlyChart"] > div, 
     [data-testid="stPlotlyChart"] > div > div {
         background-color: var(--viz-bg) !important;
     }
-    /* Light mode: white background, black text */
     @media (prefers-color-scheme: light) {
         :root {
             --bg: #ffffff;
@@ -145,30 +183,6 @@ st.markdown("""
             --section-border: #333333;
             --header-border: #000000;
         }
-        .stApp, .section, .section.viz-section, 
-        .section.feedback-section {
-            background-color: var(--bg) !important;
-            color: var(--fg) !important;
-        }
-        .stDataFrame, .stDataFrame table {
-            background-color: var(--table-bg) !important;
-        }
-        .section [data-testid="stMetric"] {
-            background-color: var(--section-bg) !important;
-            color: var(--fg) !important;
-            border-color: var(--border);
-        }
-        .stButton>button {
-            color: var(--fg) !important;
-            border-color: var(--fg);
-        }
-        h1, h2, h3, h4, h5, h6, .stMarkdown, .stWrite, .stCaption, 
-        .stTextInput label, .stSelectbox label, .stDateInput label {
-            color: var(--fg) !important;
-        }
-        .sidebar .sidebar-content {
-            background-color: var(--section-bg) !important;
-        }
         [data-testid="stPlotlyChart"], 
         [data-testid="stPlotlyChart"] > div, 
         [data-testid="stPlotlyChart"] > div > div {
@@ -177,44 +191,6 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-
-# JavaScript to detect theme by checking --bg CSS variable
-# Place this outside any cached function to avoid TokenError
-components.html("""
-    <div id="theme-detector" style="display: none;"></div>
-    <script>
-    const root = document.documentElement;
-    const bgColor = getComputedStyle(root).getPropertyValue('--bg').trim();
-    const theme = bgColor === '#ffffff' ? 'light' : 'dark';
-    const themeElement = document.getElementById('theme-detector');
-    themeElement.setAttribute('data-theme', theme);
-    </script>
-""", height=0)
-
-# Function to get theme from JavaScript
-def get_theme():
-    try:
-        # Use a unique key to avoid conflicts with other components
-        theme_html = components.html(
-            """
-            <div id="theme-detector"></div>
-            <script>
-            const theme = document.getElementById('theme-detector').getAttribute('data-theme');
-            document.getElementById('theme-detector').setAttribute('data-theme', theme);
-            </script>
-            """,
-            height=0,
-            key="theme_detector"
-        )
-        # Extract the data-theme attribute
-        theme = getattr(theme_html, 'data-theme', 'dark')
-        return theme == 'light'
-    except:
-        # Fallback to Streamlit's theme detection
-        return st.get_option("theme.base") == "light" or st._config.get_option("theme.base") == "light"
-
-# Get theme
-is_light_mode = get_theme()
 
 # Password protection
 password = st.text_input("Enter Password", type="password")
@@ -325,6 +301,9 @@ if order_id_filter:
 if filtered_df.empty:
     st.warning("No orders match the selected filters.")
     st.stop()
+
+# Determine if in light mode based on theme selection
+is_light_mode = (theme == "Light") or (theme == "Auto" and st.get_option("theme.base") == "light")
 
 # Summary section
 st.markdown('<div class="section">', unsafe_allow_html=True)
@@ -641,6 +620,6 @@ st.header("Conclusion")
 st.markdown(
     "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
-    "and temporal patterns. *Note*: Fixed TokenError and ensured light mode charts align with white background and black text."
+    "and temporal patterns. *Note*: Added theme toggle to control light/dark mode and ensure charts render correctly."
 )
 st.markdown('</div>', unsafe_allow_html=True)
