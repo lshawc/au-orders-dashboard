@@ -656,7 +656,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('<div class="section feedback-section">', unsafe_allow_html=True)
 st.header("Conclusion")
 st.markdown(
-    "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
+    "This report visualises AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
     "and temporal patterns. *Note*: Renamed 'Top 10 Towns' to 'Top 10 Suburbs' and updated to use state abbreviations (e.g., NSW, VIC)."
 )
