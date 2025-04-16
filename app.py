@@ -179,37 +179,36 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # JavaScript to detect theme by checking --bg CSS variable
+# Place this outside any cached function to avoid TokenError
 components.html("""
+    <div id="theme-detector" style="display: none;"></div>
     <script>
     const root = document.documentElement;
     const bgColor = getComputedStyle(root).getPropertyValue('--bg').trim();
     const theme = bgColor === '#ffffff' ? 'light' : 'dark';
-    const themeElement = document.createElement('div');
-    themeElement.id = 'theme-detector';
-    themeElement.style.display = 'none';
+    const themeElement = document.getElementById('theme-detector');
     themeElement.setAttribute('data-theme', theme);
-    document.body.appendChild(themeElement);
     </script>
 """, height=0)
 
 # Function to get theme from JavaScript
 def get_theme():
     try:
-        theme_detector = st.empty()
-        with theme_detector:
-            theme = components.html(
-                """
-                <div id="theme-detector"></div>
-                <script>
-                const theme = document.getElementById('theme-detector').getAttribute('data-theme');
-                document.getElementById('theme-detector').setAttribute('data-theme', theme);
-                </script>
-                """,
-                height=0,
-                fetch_data=True
-            )
-        theme_detector.empty()
-        return theme.get('data-theme', 'dark') == 'light'
+        # Use a unique key to avoid conflicts with other components
+        theme_html = components.html(
+            """
+            <div id="theme-detector"></div>
+            <script>
+            const theme = document.getElementById('theme-detector').getAttribute('data-theme');
+            document.getElementById('theme-detector').setAttribute('data-theme', theme);
+            </script>
+            """,
+            height=0,
+            key="theme_detector"
+        )
+        # Extract the data-theme attribute
+        theme = getattr(theme_html, 'data-theme', 'dark')
+        return theme == 'light'
     except:
         # Fallback to Streamlit's theme detection
         return st.get_option("theme.base") == "light" or st._config.get_option("theme.base") == "light"
@@ -435,17 +434,19 @@ else:
         labels={'OrderCount': 'Number of Orders'},
         color_discrete_sequence=['#1976d2']
     )
-    fig_map.update_layout(
-        showlegend=False,
-        font=dict(color="#ffffff"),
-        paper_bgcolor="#222222",
-        plot_bgcolor="#222222"
-    )
     if is_light_mode:
         fig_map.update_layout(
+            showlegend=False,
             font=dict(color="#000000"),
             paper_bgcolor="#ffffff",
             plot_bgcolor="#ffffff"
+        )
+    else:
+        fig_map.update_layout(
+            showlegend=False,
+            font=dict(color="#ffffff"),
+            paper_bgcolor="#222222",
+            plot_bgcolor="#222222"
         )
 st.plotly_chart(fig_map, use_container_width=True)
 
@@ -640,6 +641,6 @@ st.header("Conclusion")
 st.markdown(
     "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
-    "and temporal patterns. *Note*: Light mode charts now fully aligned with white background and black text using improved theme detection."
+    "and temporal patterns. *Note*: Fixed TokenError and ensured light mode charts align with white background and black text."
 )
 st.markdown('</div>', unsafe_allow_html=True)
