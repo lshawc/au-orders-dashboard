@@ -408,7 +408,7 @@ if not map_data.empty:
         fig_map.update_layout(
             mapbox_style="carto-positron",
             margin={"r":0, "t":0, "l":0, "b":0},
-            font=dict(color="#000000"),
+            font=dict(color="#fffafa"),
             paper_bgcolor="#ffffff",
             plot_bgcolor="#ffffff",
             coloraxis_colorbar_title="Orders"
