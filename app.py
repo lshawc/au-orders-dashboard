@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, date
 from io import StringIO
+import streamlit.components.v1 as components
 
 # Streamlit page config
 st.set_page_config(page_title="AU Orders Report", layout="wide")
@@ -127,7 +128,9 @@ st.markdown("""
         color: var(--fg) !important;
     }
     /* Fallback for chart colors in light mode */
-    [data-testid="stPlotlyChart"] {
+    [data-testid="stPlotlyChart"], 
+    [data-testid="stPlotlyChart"] > div, 
+    [data-testid="stPlotlyChart"] > div > div {
         background-color: var(--viz-bg) !important;
     }
     /* Light mode: white background, black text */
@@ -166,12 +169,53 @@ st.markdown("""
         .sidebar .sidebar-content {
             background-color: var(--section-bg) !important;
         }
-        [data-testid="stPlotlyChart"] {
+        [data-testid="stPlotlyChart"], 
+        [data-testid="stPlotlyChart"] > div, 
+        [data-testid="stPlotlyChart"] > div > div {
             background-color: #ffffff !important;
         }
     }
     </style>
 """, unsafe_allow_html=True)
+
+# JavaScript to detect theme by checking --bg CSS variable
+components.html("""
+    <script>
+    const root = document.documentElement;
+    const bgColor = getComputedStyle(root).getPropertyValue('--bg').trim();
+    const theme = bgColor === '#ffffff' ? 'light' : 'dark';
+    const themeElement = document.createElement('div');
+    themeElement.id = 'theme-detector';
+    themeElement.style.display = 'none';
+    themeElement.setAttribute('data-theme', theme);
+    document.body.appendChild(themeElement);
+    </script>
+""", height=0)
+
+# Function to get theme from JavaScript
+def get_theme():
+    try:
+        theme_detector = st.empty()
+        with theme_detector:
+            theme = components.html(
+                """
+                <div id="theme-detector"></div>
+                <script>
+                const theme = document.getElementById('theme-detector').getAttribute('data-theme');
+                document.getElementById('theme-detector').setAttribute('data-theme', theme);
+                </script>
+                """,
+                height=0,
+                fetch_data=True
+            )
+        theme_detector.empty()
+        return theme.get('data-theme', 'dark') == 'light'
+    except:
+        # Fallback to Streamlit's theme detection
+        return st.get_option("theme.base") == "light" or st._config.get_option("theme.base") == "light"
+
+# Get theme
+is_light_mode = get_theme()
 
 # Password protection
 password = st.text_input("Enter Password", type="password")
@@ -282,9 +326,6 @@ if order_id_filter:
 if filtered_df.empty:
     st.warning("No orders match the selected filters.")
     st.stop()
-
-# Determine theme for chart rendering
-is_light_mode = st.get_option("theme.base") == "light" or st._config.get_option("theme.base") == "light"
 
 # Summary section
 st.markdown('<div class="section">', unsafe_allow_html=True)
@@ -421,17 +462,19 @@ fig_bar = px.bar(
     title="Orders by State",
     labels={'OrderCount': 'Number of Orders'}
 )
-fig_bar.update_layout(
-    showlegend=False,
-    font=dict(color="#ffffff"),
-    paper_bgcolor="#222222",
-    plot_bgcolor="#222222"
-)
 if is_light_mode:
     fig_bar.update_layout(
+        showlegend=False,
         font=dict(color="#000000"),
         paper_bgcolor="#ffffff",
         plot_bgcolor="#ffffff"
+    )
+else:
+    fig_bar.update_layout(
+        showlegend=False,
+        font=dict(color="#ffffff"),
+        paper_bgcolor="#222222",
+        plot_bgcolor="#222222"
     )
 st.plotly_chart(fig_bar, use_container_width=True)
 
@@ -448,16 +491,17 @@ fig_line = px.line(
     color_discrete_sequence=['#1976d2']
 )
 fig_line.update_traces(mode='lines+markers')
-fig_line.update_layout(
-    font=dict(color="#ffffff"),
-    paper_bgcolor="#222222",
-    plot_bgcolor="#222222"
-)
 if is_light_mode:
     fig_line.update_layout(
         font=dict(color="#000000"),
         paper_bgcolor="#ffffff",
         plot_bgcolor="#ffffff"
+    )
+else:
+    fig_line.update_layout(
+        font=dict(color="#ffffff"),
+        paper_bgcolor="#222222",
+        plot_bgcolor="#222222"
     )
 st.plotly_chart(fig_line, use_container_width=True)
 
@@ -481,17 +525,19 @@ if len(state_mom_data['OrderDate'].unique()) > 1 and state_mom_data['MoM_Change'
         color_discrete_sequence=px.colors.sequential.Blues[::-1]
     )
     fig_state_mom.update_traces(mode='lines+markers')
-    fig_state_mom.update_layout(
-        font=dict(color="#ffffff"),
-        paper_bgcolor="#222222",
-        plot_bgcolor="#222222",
-        showlegend=True
-    )
     if is_light_mode:
         fig_state_mom.update_layout(
             font=dict(color="#000000"),
             paper_bgcolor="#ffffff",
-            plot_bgcolor="#ffffff"
+            plot_bgcolor="#ffffff",
+            showlegend=True
+        )
+    else:
+        fig_state_mom.update_layout(
+            font=dict(color="#ffffff"),
+            paper_bgcolor="#222222",
+            plot_bgcolor="#222222",
+            showlegend=True
         )
     st.plotly_chart(fig_state_mom, use_container_width=True)
 else:
@@ -515,20 +561,25 @@ if len(mom_data) > 1:
         name='Loss',
         line=dict(color='#d32f2f')
     ))
-    fig_mom.update_layout(
-        title="Month-over-Month Growth/Loss (%)",
-        xaxis_title="Month",
-        yaxis_title="MoM Change (%)",
-        showlegend=True,
-        font=dict(color="#ffffff"),
-        paper_bgcolor="#222222",
-        plot_bgcolor="#222222"
-    )
     if is_light_mode:
         fig_mom.update_layout(
+            title="Month-over-Month Growth/Loss (%)",
+            xaxis_title="Month",
+            yaxis_title="MoM Change (%)",
+            showlegend=True,
             font=dict(color="#000000"),
             paper_bgcolor="#ffffff",
             plot_bgcolor="#ffffff"
+        )
+    else:
+        fig_mom.update_layout(
+            title="Month-over-Month Growth/Loss (%)",
+            xaxis_title="Month",
+            yaxis_title="MoM Change (%)",
+            showlegend=True,
+            font=dict(color="#ffffff"),
+            paper_bgcolor="#222222",
+            plot_bgcolor="#222222"
         )
     st.plotly_chart(fig_mom, use_container_width=True)
     mom_data['MoM_Change'] = mom_data['MoM_Change'].apply(lambda x: f"{x:.1f}%" if pd.notnull(x) else "N/A")
@@ -589,6 +640,6 @@ st.header("Conclusion")
 st.markdown(
     "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
-    "and temporal patterns. *Note*: Light mode charts now fully aligned with white background and black text."
+    "and temporal patterns. *Note*: Light mode charts now fully aligned with white background and black text using improved theme detection."
 )
 st.markdown('</div>', unsafe_allow_html=True)
