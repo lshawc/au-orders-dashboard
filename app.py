@@ -258,7 +258,7 @@ def load_postcode_data():
 3001,Melbourne,Victoria,VIC,-37.8136,144.9631,4
 """
         postcode_df = pd.read_csv(StringIO(sample_csv))
-    required_cols = ['postcode', 'place_name', 'state_name']
+    required_cols = ['postcode', 'place_name', 'state_name', 'state_code']
     missing_cols = [col for col in required_cols if col not in postcode_df.columns]
     if missing_cols:
         st.error(f"Postcode CSV missing columns: {', '.join(missing_cols)}")
@@ -358,29 +358,29 @@ st.dataframe(
     }
 )
 
-# Top Towns Table
-st.subheader("Top 10 Towns")
-town_data = filtered_df.merge(
-    postcode_df[['postcode', 'place_name', 'state_name']],
+# Top Suburbs Table
+st.subheader("Top 10 Suburbs")
+suburb_data = filtered_df.merge(
+    postcode_df[['postcode', 'place_name', 'state_code']],
     left_on='PostalCode',
     right_on='postcode',
     how='left'
 )
-town_counts = town_data.groupby(['place_name', 'state_name']).size().reset_index(name='OrderCount')
-town_counts = town_counts.sort_values('OrderCount', ascending=False).head(10)
-missing_towns = town_counts[town_counts['place_name'].isna()]
-if not missing_towns.empty:
+suburb_counts = suburb_data.groupby(['place_name', 'state_code']).size().reset_index(name='OrderCount')
+suburb_counts = suburb_counts.sort_values('OrderCount', ascending=False).head(10)
+missing_suburbs = suburb_counts[suburb_counts['place_name'].isna()]
+if not missing_suburbs.empty:
     st.warning(
-        f"{len(missing_towns)} postal codes could not be mapped to towns (e.g., {missing_towns['place_name'].iloc[0]}). "
+        f"{len(missing_suburbs)} postal codes could not be mapped to suburbs (e.g., {missing_suburbs['place_name'].iloc[0]}). "
         "These will appear as 'Unknown' in the table."
     )
-town_counts['place_name'] = town_counts['place_name'].fillna('Unknown')
+suburb_counts['place_name'] = suburb_counts['place_name'].fillna('Unknown')
 st.dataframe(
-    town_counts,
+    suburb_counts,
     use_container_width=True,
     column_config={
-        "place_name": "Town",
-        "state_name": "State",
+        "place_name": "Suburb",
+        "state_code": "State",
         "OrderCount": "Orders"
     }
 )
@@ -658,6 +658,6 @@ st.header("Conclusion")
 st.markdown(
     "This report visualizes AU orders by postal code and state, with enhanced mapping using lat/lon data, "
     "growth trends, and detailed breakdowns. Filters and drill-downs enable targeted analysis of regional "
-    "and temporal patterns. *Note*: Added 'Top 10 Towns' section based on postal code data."
+    "and temporal patterns. *Note*: Renamed 'Top 10 Towns' to 'Top 10 Suburbs' and updated to use state abbreviations (e.g., NSW, VIC)."
 )
 st.markdown('</div>', unsafe_allow_html=True)
